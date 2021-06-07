@@ -52,47 +52,55 @@
 
     const html = htm.bind(React.createElement)
 
-    function SignalStrengthIcon(props) {
-        const {strength} = props;
-        return html`<i
-                className="bi bi-${strength >= 8 ? "wifi" : strength > 2 ? "wifi-2" : "wifi-1"} ${props.className || ""}"></i>`;
-    }
-
-    function EncryptedIcon(props) {
-        return props.encrypted && html`<i className="bi bi-lock ${props.className || ""}"></i>`;
-    }
-
-    function BatteryIcon(props) {
-        const {charge, charging} = props;
-        return html`<i
-                className="bi bi-${charging ? "battery-charging" : charge >= 8 ? "battery-full" : charge > 2 ? "battery-half" : "battery"} ${props.className || ""}"></i>`
-    }
-
-    function NetworkListEntry(props) {
-        const {network: {ssid, strength, encrypted}, activeSsid} = props;
-        return html`
-            <button type="button"
-                    className="list-group-item list-group-item-action ${activeSsid === ssid ? "active" : ""} ${props.className || ""}">
-                <${SignalStrengthIcon} strength=${strength} className="pe-3"/>
-                ${ssid}
-                <${EncryptedIcon} encrypted=${encrypted} className="float-end"/>
-            </button>
-        `
-    }
-
     class WifiManager extends React.Component {
         constructor(props) {
-            super(props);
+            super(props)
+            const {networks} = props
+            this.state = {
+                networks
+            }
         }
 
+        static SignalStrengthIcon(props) {
+            const {strength} = props;
+            return html`<i
+                    className="bi bi-${strength >= 8 ? "wifi" : strength > 2 ? "wifi-2" : "wifi-1"} ${props.className || ""}"></i>`;
+        }
+
+        static EncryptedIcon(props) {
+            return props.encrypted && html`<i className="bi bi-lock ${props.className || ""}"></i>`;
+        }
+
+        static NetworkListEntry(props) {
+            const {network: {ssid, strength, encrypted, active}, onClick, className} = props;
+            return html`
+                <button type="button"
+                        className="list-group-item list-group-item-action ${active ? "active" : ""} ${className || ""}"
+                        onClick=${onClick}>
+                    <${WifiManager.SignalStrengthIcon} strength=${strength} className="pe-3"/>
+                    ${ssid}
+                    <${WifiManager.EncryptedIcon} encrypted=${encrypted} className="float-end"/>
+                </button>
+            `
+        }
 
         render() {
-            const {networks, activeSsid} = this.props
+            const {networks} = this.state
             return html`
                 <div>
-                    <div className="list-group list-group-flush fs-2">
+                    <div className="list-group list-group-flush fs-4">
                         ${networks.map((network, i) => html`
-                            <${NetworkListEntry} network=${network} activeSsid=${activeSsid} key="${i}"/>
+                            <${WifiManager.NetworkListEntry} network=${network} key="${i}" onClick=${() =>
+                                    this.setState(prevState =>
+                                            ({
+                                                ...prevState,
+                                                networks: prevState.networks.map(network2 => ({
+                                                    ...network2,
+                                                    active: network2.ssid === network.ssid
+                                                }))
+                                            })
+                                    )
+                            }/>
                         `)}
                         <button type="button"
                                 className="list-group-item list-group-item-action"
@@ -127,12 +135,19 @@
         }
     }
 
+    function BatteryIcon(props) {
+        const {charge, charging} = props;
+        return html`<i
+                className="bi bi-${charging ? "battery-charging" : charge >= 8 ? "battery-full" : charge > 2 ? "battery-half" : "battery"} ${props.className || ""}"
+                style=${props.style}></i>`
+    }
+
     class App extends React.Component {
         constructor(props) {
             super(props)
+            const {devices} = props
             this.state = {
-                id: uniqueId(),
-                schedules: {}
+                devices
             }
         }
 
@@ -142,29 +157,62 @@
         }
 
         render() {
-            const {} = this.state
+            const {devices} = this.state
             return html`
-                <div className="flex mb-4">
-                    <${BatteryIcon} charge=${10} className="fs-2"/>
-                    <${WifiManager} networks=${
-                            [
-                                {
-                                    ssid: "Network 1",
-                                    strength: 10,
-                                    encrypted: true
-                                },
-                                {
-                                    ssid: "Test Network",
-                                    strength: 5,
-                                    encrypted: true
-                                },
-                                {
-                                    ssid: "Low Strength",
-                                    strength: 1,
-                                    encrypted: false
-                                }
-                            ]
-                    } activeSsid="Test Network"/>
+                <div className="d-flex flex-column">
+                    <nav className="navbar navbar-expand navbar-dark bg-dark">
+                        <div className="container-fluid pe-4">
+                            <div className="navbar-nav">
+                                <div className="nav-item dropdown">
+                                    <a className="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink"
+                                       role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        ${devices.filter(e => e.active).concat(devices)[0].name}
+                                    </a>
+                                    <ul className="dropdown-menu dropdown-menu-dark"
+                                        aria-labelledby="navbarDarkDropdownMenuLink">
+                                        ${devices.map((device, i) => html`
+                                            <li key="${i}"><a className="dropdown-item" href="#" onClick=${() =>
+                                                    this.setState(prevState =>
+                                                            ({
+                                                                ...prevState,
+                                                                devices: prevState.devices.map(device2 => ({
+                                                                    ...device2,
+                                                                    active: device2.name === device.name
+                                                                }))
+                                                            })
+                                                    )
+                                            }>${device.name}</a></li>
+                                        `)}
+                                    </ul>
+                                </div>
+                            </div>
+                            <${BatteryIcon} charge=${10} className="fs-4" style=${{color: "white"}}/>
+                        </div>
+                    </nav>
+                    <div className="flex-grow-1 container my-5 d-flex flex-column">
+                        <div className="flex mb-4">
+                            <${WifiManager} networks=${
+                                    [
+                                        {
+                                            ssid: "Network 1",
+                                            strength: 10,
+                                            encrypted: true
+                                        },
+                                        {
+                                            ssid: "Test Network",
+                                            strength: 5,
+                                            encrypted: true,
+                                            active: true
+                                        },
+                                        {
+                                            ssid: "Low Strength",
+                                            strength: 1,
+                                            encrypted: false
+                                        }
+                                    ]
+                            }/>
+                        </div>
+                    </div>
                 </div>
             `
         }
@@ -172,9 +220,19 @@
 
     ReactDOM.render(
         html`
-            <div className="container my-5 d-flex flex-column">
-                <${App}/>
-            </div>
+            <${App} devices=${
+                    [
+                        {
+                            name: "Device 1"
+                        },
+                        {
+                            name: "Device 2"
+                        },
+                        {
+                            name: "Device 3"
+                        }
+                    ]
+            }/>
         `,
         document.getElementById('root')
     )
