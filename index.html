@@ -40,6 +40,13 @@
 </script>
 
 <style>
+    .list-group-flush > .list-group-item {
+        border-bottom-width: 0;
+    }
+
+    .list-group-item.separator {
+        border-top-width: 1px;
+    }
 </style>
 
 <div id="root"></div>
@@ -64,7 +71,11 @@
         static SignalStrengthIcon(props) {
             const {strength} = props;
             return html`<i
-                    className="bi bi-${strength >= 8 ? "wifi" : strength > 2 ? "wifi-2" : "wifi-1"} ${props.className || ""}"></i>`;
+                    className="bi bi-${
+                            strength >= 8 ? "wifi" :
+                                    strength > 2 ? "wifi-2" :
+                                            "wifi-1"
+                    } ${props.className || ""}"></i>`;
         }
 
         static EncryptedIcon(props) {
@@ -103,8 +114,7 @@
                             }/>
                         `)}
                         <button type="button"
-                                className="list-group-item list-group-item-action"
-                                style=${{"borderTopWidth": "0px"}}
+                                className="list-group-item list-group-item-action separator"
                                 data-bs-toggle="modal" data-bs-target="#addWifiModal">
                             <i className="bi bi-plus pe-3"></i>
                             Add WiFi Network
@@ -118,14 +128,20 @@
                                     <button type="button" className="btn-close" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
                                 </div>
-                                <div className="modal-body">
-                                    <p>SSID: <input type="text"/></p>
-                                    <p>Password: <input type="password"/></p>
-                                </div>
+                                <form className="modal-body">
+                                    <div className="input-group mb-3">
+                                        <span className="input-group-text">SSID</span>
+                                        <input type="text" className="form-control"/>
+                                    </div>
+                                    <div className="input-group mb-3">
+                                        <span className="input-group-text">Password</span>
+                                        <input type="password" autoComplete="off" className="form-control"/>
+                                    </div>
+                                </form>
                                 <div className="modal-footer">
-                                    <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close
+                                    <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cancel
                                     </button>
-                                    <button type="button" className="btn btn-primary">Save changes</button>
+                                    <button type="button" className="btn btn-primary">Connect</button>
                                 </div>
                             </div>
                         </div>
@@ -138,7 +154,12 @@
     function BatteryIcon(props) {
         const {charge, charging} = props;
         return html`<i
-                className="bi bi-${charging ? "battery-charging" : charge >= 8 ? "battery-full" : charge > 2 ? "battery-half" : "battery"} ${props.className || ""}"
+                className="bi bi-${
+                        charging ? "battery-charging" :
+                                charge >= 8 ? "battery-full" :
+                                        charge > 2 ? "battery-half" :
+                                                "battery"
+                } ${props.className || ""}"
                 style=${props.style}></i>`
     }
 
@@ -186,7 +207,12 @@
                                     </ul>
                                 </div>
                             </div>
-                            <${BatteryIcon} charge=${10} className="fs-4" style=${{color: "white"}}/>
+                            <div className="fs-4" style=${{color: "white"}}>
+                                <${BatteryIcon} charge=${10} className="me-4"/>
+                                <a style=${{color: "inherit"}} href="#" onClick=${() =>
+                                        console.log("reboot")
+                                }><i className="bi bi-power"></i></a>
+                            </div>
                         </div>
                     </nav>
                     <div className="flex-grow-1 container my-5 d-flex flex-column">
