@@ -47,6 +47,14 @@
     .list-group-item.separator {
         border-top-width: 1px;
     }
+
+    .inherit-color {
+        color: inherit !important;
+    }
+
+    .navbar-icon {
+        color: white;
+    }
 </style>
 
 <div id="root"></div>
@@ -168,17 +176,23 @@
             super(props)
             const {devices} = props
             this.state = {
-                devices
+                devices,
+                charge: 0
             }
         }
 
         componentDidMount() {
             let self = this
-            setInterval(() => console.log("update " + self), 2000)
+            setInterval(() => self.setState(prevState =>
+                ({
+                    ...prevState,
+                    charge: (prevState.charge + 1) % 11
+                })
+            ), 500)
         }
 
         render() {
-            const {devices} = this.state
+            const {devices, charge} = this.state
             return html`
                 <div className="d-flex flex-column">
                     <nav className="navbar navbar-expand navbar-dark bg-dark">
@@ -207,9 +221,9 @@
                                     </ul>
                                 </div>
                             </div>
-                            <div className="fs-4" style=${{color: "white"}}>
-                                <${BatteryIcon} charge=${10} className="me-4"/>
-                                <a style=${{color: "inherit"}} href="#" onClick=${() =>
+                            <div className="fs-4 navbar-icon">
+                                <${BatteryIcon} charge=${charge} className="me-4"/>
+                                <a className="inherit-color" href="#" onClick=${() =>
                                         console.log("reboot")
                                 }><i className="bi bi-power"></i></a>
                             </div>
